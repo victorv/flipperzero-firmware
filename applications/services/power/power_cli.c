@@ -17,24 +17,29 @@ void power_cli_off(Cli* cli, FuriString* args) {
 void power_cli_reboot(Cli* cli, FuriString* args) {
     UNUSED(cli);
     UNUSED(args);
-    power_reboot(PowerBootModeNormal);
+    Power* power = furi_record_open(RECORD_POWER);
+    power_reboot(power, PowerBootModeNormal);
 }
 
 void power_cli_reboot2dfu(Cli* cli, FuriString* args) {
     UNUSED(cli);
     UNUSED(args);
-    power_reboot(PowerBootModeDfu);
+    Power* power = furi_record_open(RECORD_POWER);
+    power_reboot(power, PowerBootModeDfu);
 }
 
 void power_cli_5v(Cli* cli, FuriString* args) {
     UNUSED(cli);
+    Power* power = furi_record_open(RECORD_POWER);
     if(!furi_string_cmp(args, "0")) {
-        furi_hal_power_disable_otg();
+        power_enable_otg(power, false);
     } else if(!furi_string_cmp(args, "1")) {
-        furi_hal_power_enable_otg();
+        power_enable_otg(power, true);
     } else {
         cli_print_usage("power_otg", "<1|0>", furi_string_get_cstr(args));
     }
+
+    furi_record_close(RECORD_POWER);
 }
 
 void power_cli_3v3(Cli* cli, FuriString* args) {
@@ -48,7 +53,7 @@ void power_cli_3v3(Cli* cli, FuriString* args) {
     }
 }
 
-static void power_cli_command_print_usage() {
+static void power_cli_command_print_usage(void) {
     printf("Usage:\r\n");
     printf("power <cmd> <args>\r\n");
     printf("Cmd list:\r\n");
@@ -106,7 +111,7 @@ void power_cli(Cli* cli, FuriString* args, void* context) {
     furi_string_free(cmd);
 }
 
-void power_on_system_start() {
+void power_on_system_start(void) {
 #ifdef SRV_CLI
     Cli* cli = furi_record_open(RECORD_CLI);
 
